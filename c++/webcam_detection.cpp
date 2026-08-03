@@ -21,7 +21,7 @@ const float CONFIDENCE_THRESHOLD = 0.45;
 
 
 
-int detection(cv::dnn::Net& net, const cv::Mat& frame, const string& frame_name) {
+int detection(cv::dnn::Net& net, const cv::Mat& frame, std::vector<cv::Mat>& outputs) {
 
     // 1. Load the network
     // cv::dnn::Net net = cv::dnn::readNetFromONNX(modelPath);
@@ -128,6 +128,58 @@ void readFiles(const string& path, vector<string>& filelist){
 
 }
 
+int detection_from_video(cv::dnn::Net& net, std::string fn_prefix) {
+    // 1. Initialize VideoCapture with the default camera index (0)
+    cv::VideoCapture cap(0);
+
+    // 2. Safety Check: Verify if the webcam opened successfully
+    if (!cap.isOpened()) {
+        std::cerr << "Error: Could not open the webcam." << std::endl;
+        return -1;
+    }
+
+    // Allocate a matrix to hold individual video frames
+    cv::Mat frame;
+    const std::string windowName = "Webcam Live Feed";
+    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+
+    std::cout << "Streaming live video. Press 'ESC' to exit..." << std::endl;
+
+    int count = 0;
+
+    // 3. Continuous frame capture loop
+    while (true) {
+        // Grab and decode the latest frame
+        cap >> frame;
+
+        // Verify the frame is not empty
+        if (frame.empty()) {
+            std::cerr << "Error: Captured an empty frame." << std::endl;
+            break;
+        }
+        count ++;
+
+        std::string fn = fn_prefix + string(count) +".jpg";
+        detection(net, frame, fn);
+
+        // 4. Display the frame in the created window
+        cv::imshow(windowName, frame);
+
+        // 5. Wait for 30ms and check if 'ESC' (ASCII 27) is pressed
+        char key = static_cast<char>(cv::waitKey(30));
+        if (key == 27) {
+            break;
+        }
+    }
+
+    // 6. Free hardware resources and clean up windows
+    cap.release();
+    cv::destroyAllWindows();
+
+    return 0;
+}
+
+
 
 int main(int argc, char**argv){
 
@@ -143,12 +195,13 @@ int main(int argc, char**argv){
     readFiles(imagePath, filelist);
 
     cv::dnn::Net net = cv::dnn::readNetFromONNX("yolov8n.onnx");
+    std::string fn_prefix = "./images/detection_frame_";
+    detection_from_video(net, fn_prefix);
 
-
-    for(string fn: filelist){
-        cv::Mat frame = cv::imread(fn);
-        detection(net, frame, fn);
-    }
+    // for(string fn: filelist){
+    //     cv::Mat frame = cv::imread(fn);
+    //     detection(net, frame, fn);
+    // }
 
 
 
