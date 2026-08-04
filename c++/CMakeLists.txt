@@ -28,7 +28,7 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Define the target executable
-add_executable(yolo_infer main.cpp)
+add_executable(yolo_infer webcam_detection.cpp)
 
 # Link OpenCV libraries to your executable
 target_link_libraries(yolo_infer ${OpenCV_LIBS})

@@ -21,7 +21,7 @@ const float CONFIDENCE_THRESHOLD = 0.45;
 
 
 
-int detection(cv::dnn::Net& net, const cv::Mat& frame, std::vector<cv::Mat>& outputs) {
+int detection(cv::dnn::Net& net, const cv::Mat& frame, const string& frame_name) {
 
     // 1. Load the network
     // cv::dnn::Net net = cv::dnn::readNetFromONNX(modelPath);
@@ -159,7 +159,7 @@ int detection_from_video(cv::dnn::Net& net, std::string fn_prefix) {
         }
         count ++;
 
-        std::string fn = fn_prefix + string(count) +".jpg";
+        std::string fn = fn_prefix + std::to_string(count) +".jpg";
         detection(net, frame, fn);
 
         // 4. Display the frame in the created window
@@ -181,30 +181,30 @@ int detection_from_video(cv::dnn::Net& net, std::string fn_prefix) {
 
 
 
+
 int main(int argc, char**argv){
 
-    if(argc<2){
-        std::cerr<<"Usage: " << argv[0] << " <path_to_image>\n";
-        return -1;
-    }
 
-    //Assign image path from CLI argument
-    std::string imagePath = argv[1];
+    //Assign model path from CLI argument
+    std::string modelPath = "yolov8n.onnx";
+    std::string outputPath = "./images/";
 
-    vector<string> filelist;
-    readFiles(imagePath, filelist);
+    if (argc>1) modelPath = argv[1];
+    if (argc>2) outputPath = argv[2];
 
-    cv::dnn::Net net = cv::dnn::readNetFromONNX("yolov8n.onnx");
-    std::string fn_prefix = "./images/detection_frame_";
+
+    cv::dnn::Net net = cv::dnn::readNetFromONNX(modelPath);
+    std::string fn_prefix = outputPath + "detection_frame_";
     detection_from_video(net, fn_prefix);
 
+    // std::string imagePath = "./images/"; 
+    // vector<string> filelist;
+    // readFiles(imagePath, filelist);
+    
     // for(string fn: filelist){
     //     cv::Mat frame = cv::imread(fn);
     //     detection(net, frame, fn);
     // }
-
-
-
 
 }
 
